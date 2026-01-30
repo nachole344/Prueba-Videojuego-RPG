@@ -113,7 +113,7 @@ public class JuegoRPG extends PApplet {
 
                     text("1. Ataque", 100, 600);
                     text("2. Skills", 250, 600);
-                    text("3. Objetos", 400, 600); // Temporalmente inutilizado
+                    text("3. Objetos", 400, 600);
 
                 } else if (status == GameStatus.SKILL_MENU) {
 

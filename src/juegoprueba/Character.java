@@ -85,28 +85,28 @@ public class Character {
     }
 
     public int getStrength() {
-        if (this.strengthUpgradeTurnsLeft > 0) { 
+        if (this.strengthUpgradeTurnsLeft > 0) {
             return (int) (this.strength * 1.5);
         }
         return this.strength;
     }
 
     public int getMagic() {
-        if (this.magicUpgradeTurnsLeft > 0) { 
+        if (this.magicUpgradeTurnsLeft > 0) {
             return (int) (this.magic * 1.5);
         }
         return this.magic;
     }
 
     public int getDefense() {
-        if (this.defenseUpgradeTurnsLeft > 0) { 
+        if (this.defenseUpgradeTurnsLeft > 0) {
             return (int) (this.defense * 1.5);
         }
         return this.defense;
     }
 
     public int getMagicDefense() {
-        if (this.magicDefenseUpgradeTurnsLeft > 0) { 
+        if (this.magicDefenseUpgradeTurnsLeft > 0) {
             return (int) (this.magicDefense * 1.5);
         }
         return this.magicDefense;
@@ -130,6 +130,47 @@ public class Character {
 
     public void restPoisonTurn(int amount) {
         this.poisonedTurnsLeft -= amount;
+        
+        if (this.poisonedTurnsLeft <= 0) {
+            this.poisonedTurnsLeft = 0;
+            
+            System.out.println(this.name + " se recuperó del veneno.");
+            
+        }
+    }
+    
+    public void updateStatusUpgradeTurns(){
+        if (this.strengthUpgradeTurnsLeft > 0) {
+            this.strengthUpgradeTurnsLeft--;
+            if (this.strengthUpgradeTurnsLeft == 0) {
+                System.out.println("El ataque de " + this.name + " volvió a la normalidad.");
+            }
+            
+        }
+        
+        if (this.defenseUpgradeTurnsLeft > 0) {
+            this.defenseUpgradeTurnsLeft--;
+            if (this.defenseUpgradeTurnsLeft == 0) {
+                System.out.println("La defensa de " + this.name + " volvió a la normalidad.");
+            }
+            
+        }
+        
+        if (this.magicUpgradeTurnsLeft > 0) {
+            this.magicUpgradeTurnsLeft--;
+            if (this.magicUpgradeTurnsLeft == 0) {
+                System.out.println("La magia de " + this.name + " volvió a la normalidad.");
+            }
+            
+        }
+        
+        if (this.magicDefenseUpgradeTurnsLeft > 0) {
+            this.magicDefenseUpgradeTurnsLeft--;
+            if (this.magicDefenseUpgradeTurnsLeft == 0) {
+                System.out.println("La defensa mágica de " + this.name + " volvió a la normalidad.");
+            }
+            
+        }
     }
 
     // Methods
@@ -209,43 +250,59 @@ public class Character {
             System.out.println(this.name + " usa " + item.getName());
 
             if (item.getType() == ItemType.HEAL) {
-                
+
                 target.heal(item.getPower());
 
             } else if (item.getType() == ItemType.ETHER) {
-                
+
                 target.restoreSP(item.getPower());
 
             } else if (item.getType() == ItemType.REVIVE) {
-                
+
                 if (!target.isAlive()) {
-                    
-                    target.heal(target.getMaxHP()/2);
-                    
+
+                    target.heal(target.getMaxHP() / 2);
+
                 } else { // Si no está muerto, se le curará un cuarto de vida
-                    
-                    target.heal(target.getMaxHP()/4);
-                    
+
+                    target.heal(target.getMaxHP() / 4);
+
                 }
-                
+
             } else if (item.getType() == ItemType.MAX_REVIVE) {
-                
+
                 if (!target.isAlive()) {
-                    
+
                     target.heal(target.getMaxHP());
-                    
+
                 } else { // Si no está muerto, se le mitad
-                    
-                    target.heal(target.getMaxHP()/2);
-                    
+
+                    target.heal(target.getMaxHP() / 2);
+
                 }
-                
+
             } else if (item.getType() == ItemType.POISON_HEAL) {
-                
+
                 target.restPoisonTurn(item.getPower());
-                
+
+            } else if (item.getType() == ItemType.STRENGHT_UPGRADE) {
+
+                target.strengthUpgradeTurnsLeft = item.getPower();
+
+            } else if (item.getType() == ItemType.DEFENSE_UPGRADE) {
+
+                target.defenseUpgradeTurnsLeft = item.getPower();
+
+            } else if (item.getType() == ItemType.MAGIC_UPGRADE) {
+
+                target.magicUpgradeTurnsLeft = item.getPower();
+
+            } else if (item.getType() == ItemType.MAGIC_DEFENSE_UPGRADE) {
+
+                target.magicDefenseUpgradeTurnsLeft = item.getPower();
+
             } else { // Objeto de ataque
-                
+
                 this.itemDamage(item, target);
 
             }
@@ -342,7 +399,7 @@ public class Character {
     public void attack(Character target) {
         System.out.println(this.name + " ataca a " + target.name + "!");
 
-        int damageDealt = this.strength - target.defense;
+        int damageDealt = this.getStrength() - target.getDefense();
 
         // Seguro de daño mínimo
         if (damageDealt <= 0) {
@@ -383,7 +440,7 @@ public class Character {
         } else { // Si la skill no cura, hace daño
 
             // Calculo del daño (Magia del usuario + poder de la habilidad) - defensa magica del oponente
-            int damage = (this.magic + skill.getPower()) - target.magicDefense;
+            int damage = (this.getMagic() + skill.getPower()) - target.getMagicDefense();
 
             // Seguro de daño mínimo
             if (damage <= 0) {
@@ -421,7 +478,7 @@ public class Character {
 
         if (item.getType() == ItemType.ATTACK) {
 
-            damage -= target.defense;
+            damage -= target.getDefense();
 
             // Seguro de daño mínimo
             if (damage <= 0) {
@@ -431,7 +488,7 @@ public class Character {
 
         } else {
 
-            damage -= target.magicDefense;
+            damage -= target.getDefense();
 
             // Seguro de daño mínimo
             if (damage <= 0) {
