@@ -31,12 +31,18 @@ public class JuegoRPG extends PApplet {
     Skill bufu;
     Skill dia;
     Skill toxic;
+    Skill tornado;
+    Skill spark;
 
     // Declaracion de los items
     Item templatePotion;
     Item templateEther;
     Item templateAntidote;
     Item templateItemAgi;
+    Item templateProtein;
+    Item templateIron;
+    Item templateCalcium;
+    Item templateZinc;
 
     public static void main(String[] args) {
         PApplet.main("juegoprueba.JuegoRPG");
@@ -66,23 +72,33 @@ public class JuegoRPG extends PApplet {
         bufu = new Skill("Bufu", Type.ICE, 10, 5);
         dia = new Skill("Dia", Type.HEAL, 10, 5);
         toxic = new Skill("Toxic", Type.POISON, 10, 5);
+        tornado = new Skill("Tornado", Type.WIND, 10, 5);
+        spark = new Skill("Spark", Type.ELECTRIC, 10, 5);
 
         // Crear templates de Items
         templatePotion = new Item("Poción", ItemType.HEAL, 50, 1, false);
         templateEther = new Item("Éter", ItemType.ETHER, 10, 1, false);
         templateAntidote = new Item("Antidoto", ItemType.POISON_HEAL, 3, 1, false);
         templateItemAgi = new Item("Item Agi", ItemType.FIRE_ATTACK, 10, 1, true);
+        templateProtein = new Item("Proteina", ItemType.STRENGHT_UPGRADE, 4, 1, false);
+        templateIron = new Item("Hierro", ItemType.DEFENSE_UPGRADE, 4, 1, false);
+        templateCalcium = new Item("Calcium", ItemType.MAGIC_UPGRADE, 4, 1, false);
+        templateZinc = new Item("Zinc", ItemType.MAGIC_DEFENSE_UPGRADE, 4, 1, false);
 
         // Crear heroes, asignar sus skills y darle sus objetos iniciales.
         hero = new Character("Joker", 100, 50, 20, 15, 10, 10, Type.ICE);
         hero.addSkill(agi);
         hero.addSkill(bufu);
         hero.addSkill(dia);
-        
+
         hero.addItem(templatePotion, 3);
         hero.addItem(templateEther, 2);
         hero.addItem(templateAntidote, 2);
         hero.addItem(templateItemAgi, 1);
+        hero.addItem(templateProtein, 1);
+        hero.addItem(templateIron, 1);
+        hero.addItem(templateCalcium, 1);
+        hero.addItem(templateZinc, 1);
 
         // Crear  y asignar sus skills
         enemy = new Character("Shadow", 80, 20, 15, 10, 5, 5, Type.FIRE);
@@ -111,37 +127,55 @@ public class JuegoRPG extends PApplet {
 
                 if (status == GameStatus.BATTLE) {
 
-                    text("1. Ataque", 100, 600);
-                    text("2. Skills", 250, 600);
-                    text("3. Objetos", 400, 600);
+                    text("1. Ataque", 50, 550);
+                    text("2. Skills", 200, 550);
+                    text("3. Objetos", 350, 550);
 
                 } else if (status == GameStatus.SKILL_MENU) {
 
-                    int finalIndex = 0;
+                    int xAddition = 0;
+                    
+                    int y = 550;
 
                     for (int i = 0; i < hero.getSkills().size(); i++) {
+                        
+                        if (i % 7 == 0 && i != 0) {
+                            
+                            y += 50;
+                            xAddition = 0;
+                            
+                        }
 
-                        text((i + 1) + ". " + hero.getSkills().get(i).getName() + " (" + hero.getSkills().get(i).getCost() + " SP)", 100 + 150 * i, 600);
+                        text((i + 1) + ". " + hero.getSkills().get(i).getName() + " (" + hero.getSkills().get(i).getCost() + " SP)", 50 + 150 * i, y);
 
-                        finalIndex++;
-
+                        xAddition++;
+                        
                     }
 
-                    text("0. Cancelar", 100 + 150 * finalIndex, 600);
+                    text("0. Cancelar", 100 + 150 * xAddition, y);
 
                 } else if (status == GameStatus.ITEM_MENU) {
 
-                    int finalIndex = 0;
+                    int xAddition = 0;
+                    
+                    int y = 550;
 
                     for (int i = 0; i < hero.getItems().size(); i++) {
+                        
+                        if (i % 7 == 0 && i != 0) {
+                            
+                            y += 50;
+                            xAddition = 0;
+                            
+                        }
 
-                        text((i + 1) + ". " + hero.getItems().get(i).getName() + " ( x" + hero.getItems().get(i).getAmount() + ")", 100 + 150 * i, 600);
+                        text((i + 1) + ". " + hero.getItems().get(i).getName() + " ( x" + hero.getItems().get(i).getAmount() + ")", 50 + 150 * xAddition, y);
 
-                        finalIndex++;
+                        xAddition++;
 
                     }
 
-                    text("0. Cancelar", 100 + 150 * finalIndex, 600);
+                    text("0. Cancelar", 50 + 150 * xAddition, y);
 
                 }
 
@@ -187,6 +221,12 @@ public class JuegoRPG extends PApplet {
                         hero.receiveDamage(5);
                         hero.restPoisonTurn(1);
 
+                    }
+
+                    if (hero.hasStatusBuff()) { // Revisa si hay algún buffeo y luego revisa cuál buffeo tiene
+                        
+                        hero.updateStatusUpgradeTurns();
+                        
                     }
 
                     if (!hero.isAlive()) {
@@ -239,6 +279,35 @@ public class JuegoRPG extends PApplet {
         }
 
         rect(x - 25, y, 50, 100); // El personaje (de momento un rectangulo)
+
+        if (c.hasStatusBuff()) { // Revisa si hay algún buffeo y luego revisa cuál buffeo tiene
+
+            textSize(15);
+            textAlign(CENTER);
+
+            if (c.getStrengthUpgrade() > 0) {
+                fill(255, 50, 50);
+                text("S", x - 25, y + 115);
+            }
+
+            if (c.getDefenseUpgrade() > 0) {
+                fill(50, 50, 255);
+                text("D", x - 10, y + 115);
+            }
+
+            if (c.getMagicUpgrade() > 0) {
+                fill(50, 255, 50);
+                text("M", x + 5, y + 115);
+
+            }
+
+            if (c.getMagicDefenseUpgrade() > 0) {
+                fill(50, 200, 200);
+                text("MD", x + 25, y + 115);
+
+            }
+
+        }
 
         fill(255);
         textSize(20);
@@ -302,7 +371,7 @@ public class JuegoRPG extends PApplet {
 
                 }
 
-            } else if (key == '3'){
+            } else if (key == '3') {
                 println("Presionaste 3: Objetos");
 
                 if (!hero.getItems().isEmpty()) {
@@ -314,7 +383,7 @@ public class JuegoRPG extends PApplet {
                     System.out.println("No tienes objetos");
 
                 }
-                
+
             }
 
         } else if (status == GameStatus.SKILL_MENU) { // El jugador está en el menu de mágia
@@ -357,12 +426,12 @@ public class JuegoRPG extends PApplet {
 
                 if (key == String.valueOf(i + 1).charAt(0)) {
 
-                    if (!hero.getItems().get(i).getOffensive()){
-                        
+                    if (!hero.getItems().get(i).getOffensive()) {
+
                         hero.useItem(hero.getItems().get(i), hero);
 
                     } else { // Objetos ofensivos
-                        
+
                         hero.useItem(hero.getItems().get(i), enemy);
                     }
 

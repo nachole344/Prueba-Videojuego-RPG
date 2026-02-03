@@ -128,52 +128,92 @@ public class Character {
         return this.poisonedTurnsLeft > 0;
     }
 
+    public boolean hasStatusBuff() {
+
+        if (this.getStrengthUpgrade() > 0) {
+            return true;
+        }
+
+        if (this.getDefenseUpgrade() > 0) {
+            return true;
+
+        }
+
+        if (this.getMagicUpgrade() > 0) {
+            return true;
+
+        }
+
+        if (this.getMagicDefenseUpgrade() > 0) {
+            return true;
+
+        }
+
+        return false;
+    }
+
+    public int getStrengthUpgrade() {
+        return this.strengthUpgradeTurnsLeft;
+    }
+
+    public int getDefenseUpgrade() {
+        return this.defenseUpgradeTurnsLeft;
+    }
+
+    public int getMagicUpgrade() {
+        return this.magicUpgradeTurnsLeft;
+    }
+
+    public int getMagicDefenseUpgrade() {
+        return this.magicDefenseUpgradeTurnsLeft;
+    }
+
+    // Methods
     public void restPoisonTurn(int amount) {
         this.poisonedTurnsLeft -= amount;
-        
+
         if (this.poisonedTurnsLeft <= 0) {
             this.poisonedTurnsLeft = 0;
-            
+
             System.out.println(this.name + " se recuperó del veneno.");
-            
+
         }
     }
-    
-    public void updateStatusUpgradeTurns(){
+
+    public void updateStatusUpgradeTurns() {
         if (this.strengthUpgradeTurnsLeft > 0) {
             this.strengthUpgradeTurnsLeft--;
             if (this.strengthUpgradeTurnsLeft == 0) {
                 System.out.println("El ataque de " + this.name + " volvió a la normalidad.");
             }
-            
+
         }
-        
+
         if (this.defenseUpgradeTurnsLeft > 0) {
             this.defenseUpgradeTurnsLeft--;
             if (this.defenseUpgradeTurnsLeft == 0) {
                 System.out.println("La defensa de " + this.name + " volvió a la normalidad.");
             }
-            
+
         }
-        
+
         if (this.magicUpgradeTurnsLeft > 0) {
             this.magicUpgradeTurnsLeft--;
             if (this.magicUpgradeTurnsLeft == 0) {
                 System.out.println("La magia de " + this.name + " volvió a la normalidad.");
             }
-            
+
         }
-        
+
         if (this.magicDefenseUpgradeTurnsLeft > 0) {
             this.magicDefenseUpgradeTurnsLeft--;
             if (this.magicDefenseUpgradeTurnsLeft == 0) {
                 System.out.println("La defensa mágica de " + this.name + " volvió a la normalidad.");
             }
-            
+
         }
     }
 
-    // Methods
     public void addSkill(Skill newSkill) {
         // Verificar si el personaje ya sabe la habilidad
         for (Skill s : this.skills) {
