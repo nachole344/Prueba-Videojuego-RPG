@@ -215,6 +215,13 @@ public class Character {
     }
 
     public void addSkill(Skill newSkill) {
+        // Verificar que no supera el límite de habilidades
+        if (this.skills.size() == 10) {
+            System.out.println(this.name + " no puede aprender más habilidades");
+            return;
+
+        }
+
         // Verificar si el personaje ya sabe la habilidad
         for (Skill s : this.skills) {
             if (s.getName().equals(newSkill.getName())) {
@@ -249,9 +256,19 @@ public class Character {
         for (Item i : this.items) {
             if (i.getName().equals(itemTemplate.getName())) {
 
-                i.addAmount(amount);
-                System.out.println(this.name + " guardó " + itemTemplate.getName() + " (Total: " + i.getAmount() + ")");
-                return;
+                if (i.getAmount() >= 99) {
+                    
+                    System.out.println("No se pueden acumular más " + itemTemplate.getName() + " en el inventario");
+                    return;
+
+                } else {
+
+                    i.addAmount(amount);
+                    System.out.println(this.name + " guardó " + itemTemplate.getName() + " (Total: " + i.getAmount() + ")");
+                    return;
+                    
+                }
+
             }
 
         }
@@ -289,15 +306,7 @@ public class Character {
 
             System.out.println(this.name + " usa " + item.getName());
 
-            if (item.getType() == ItemType.HEAL) {
-
-                target.heal(item.getPower());
-
-            } else if (item.getType() == ItemType.ETHER) {
-
-                target.restoreSP(item.getPower());
-
-            } else if (item.getType() == ItemType.REVIVE) {
+            if (item.getType() == ItemType.REVIVE) {
 
                 if (!target.isAlive()) {
 
@@ -321,29 +330,45 @@ public class Character {
 
                 }
 
-            } else if (item.getType() == ItemType.POISON_HEAL) {
+            } else if (target.isAlive()) {
 
-                target.restPoisonTurn(item.getPower());
+                if (item.getType() == ItemType.HEAL) {
 
-            } else if (item.getType() == ItemType.STRENGHT_UPGRADE) {
+                    target.heal(item.getPower());
 
-                target.strengthUpgradeTurnsLeft = item.getPower();
+                } else if (item.getType() == ItemType.ETHER) {
 
-            } else if (item.getType() == ItemType.DEFENSE_UPGRADE) {
+                    target.restoreSP(item.getPower());
 
-                target.defenseUpgradeTurnsLeft = item.getPower();
+                } else if (item.getType() == ItemType.POISON_HEAL) {
 
-            } else if (item.getType() == ItemType.MAGIC_UPGRADE) {
+                    target.restPoisonTurn(item.getPower());
 
-                target.magicUpgradeTurnsLeft = item.getPower();
+                } else if (item.getType() == ItemType.STRENGHT_UPGRADE) {
 
-            } else if (item.getType() == ItemType.MAGIC_DEFENSE_UPGRADE) {
+                    target.strengthUpgradeTurnsLeft = item.getPower();
 
-                target.magicDefenseUpgradeTurnsLeft = item.getPower();
+                } else if (item.getType() == ItemType.DEFENSE_UPGRADE) {
 
-            } else { // Objeto de ataque
+                    target.defenseUpgradeTurnsLeft = item.getPower();
 
-                this.itemDamage(item, target);
+                } else if (item.getType() == ItemType.MAGIC_UPGRADE) {
+
+                    target.magicUpgradeTurnsLeft = item.getPower();
+
+                } else if (item.getType() == ItemType.MAGIC_DEFENSE_UPGRADE) {
+
+                    target.magicDefenseUpgradeTurnsLeft = item.getPower();
+
+                } else { // Objeto de ataque
+
+                    this.itemDamage(item, target);
+
+                }
+
+            } else {
+
+                System.out.println("El objeto no tuvo efecto.");
 
             }
 
@@ -454,7 +479,7 @@ public class Character {
 
         }
 
-        calculateCritical(damageDealt);
+        damageDealt = calculateCritical(damageDealt);
 
         target.receiveDamage(damageDealt);
 
@@ -497,7 +522,7 @@ public class Character {
 
             }
 
-            calculateCritical(damage);
+            damage = calculateCritical(damage);
 
             target.receiveDamage(damage);
 
@@ -578,7 +603,7 @@ public class Character {
 
         }
 
-        calculateCritical(damage);
+        damage = calculateCritical(damage);
 
         target.receiveDamage(damage);
 

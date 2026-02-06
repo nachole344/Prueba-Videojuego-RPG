@@ -4,8 +4,10 @@ import processing.core.PApplet;
 
 public class JuegoRPG extends PApplet {
 
-    static final int SCREEN_WIDTH = 1200;
+    static final int SCREEN_WIDTH = 1275;
     static final int SCREEN_HEIGHT = 675;
+
+    static final int ITEMS_PER_PAGE = 10;
 
     // Estados de juego
     enum GameStatus {
@@ -22,6 +24,12 @@ public class JuegoRPG extends PApplet {
 
     int temp = 0; // Para contar el tiempo entre turnos
 
+    int cursorIndexX = 0; // Para indicar el index del cursor en el eje X
+    int cursorIndexY = 0; // Para indicar el index del cursor en el eje Y
+
+    int page = 0;
+    int maxPages;
+
     // Declaración de Personajes
     Character hero;
     Character enemy;
@@ -36,9 +44,12 @@ public class JuegoRPG extends PApplet {
 
     // Declaracion de los items
     Item templatePotion;
+    Item templateSuperPotion;
     Item templateEther;
     Item templateAntidote;
     Item templateItemAgi;
+    Item templateRevive;
+    Item templateMaxRevive;
     Item templateProtein;
     Item templateIron;
     Item templateCalcium;
@@ -77,9 +88,12 @@ public class JuegoRPG extends PApplet {
 
         // Crear templates de Items
         templatePotion = new Item("Poción", ItemType.HEAL, 50, 1, false);
+        templateSuperPotion = new Item("Super Poción", ItemType.HEAL, 100, 1, false);
         templateEther = new Item("Éter", ItemType.ETHER, 10, 1, false);
         templateAntidote = new Item("Antidoto", ItemType.POISON_HEAL, 3, 1, false);
         templateItemAgi = new Item("Item Agi", ItemType.FIRE_ATTACK, 10, 1, true);
+        templateRevive = new Item("Revivir", ItemType.REVIVE, 1, 1, false);
+        templateMaxRevive = new Item("Revivir Máximo", ItemType.MAX_REVIVE, 1, 1, false);
         templateProtein = new Item("Proteina", ItemType.STRENGHT_UPGRADE, 4, 1, false);
         templateIron = new Item("Hierro", ItemType.DEFENSE_UPGRADE, 4, 1, false);
         templateCalcium = new Item("Calcium", ItemType.MAGIC_UPGRADE, 4, 1, false);
@@ -92,9 +106,12 @@ public class JuegoRPG extends PApplet {
         hero.addSkill(dia);
 
         hero.addItem(templatePotion, 3);
+        hero.addItem(templateSuperPotion, 2);
         hero.addItem(templateEther, 2);
         hero.addItem(templateAntidote, 2);
         hero.addItem(templateItemAgi, 1);
+        hero.addItem(templateRevive, 2);
+        hero.addItem(templateMaxRevive, 2);
         hero.addItem(templateProtein, 1);
         hero.addItem(templateIron, 1);
         hero.addItem(templateCalcium, 1);
@@ -125,57 +142,70 @@ public class JuegoRPG extends PApplet {
 
                 textAlign(LEFT);
 
+                if (cursorIndexX < 0 || cursorIndexX > 4) {
+
+                    text("> ", 180 + 150 * cursorIndexX, 550 + 50 * cursorIndexY);
+
+                } else {
+
+                    text("> ", 80 + 200 * cursorIndexX, 550 + 50 * cursorIndexY);
+
+                }
                 if (status == GameStatus.BATTLE) {
 
-                    text("1. Ataque", 50, 550);
-                    text("2. Skills", 200, 550);
-                    text("3. Objetos", 350, 550);
+                    text("Ataque", 100, 550);
+                    text("Skills", 300, 550);
+                    text("Objetos", 500, 550);
 
                 } else if (status == GameStatus.SKILL_MENU) {
 
                     int xAddition = 0;
-                    
+
                     int y = 550;
 
                     for (int i = 0; i < hero.getSkills().size(); i++) {
-                        
-                        if (i % 7 == 0 && i != 0) {
-                            
+
+                        if (i % 5 == 0 && i != 0) {
+
                             y += 50;
                             xAddition = 0;
-                            
+
                         }
 
-                        text((i + 1) + ". " + hero.getSkills().get(i).getName() + " (" + hero.getSkills().get(i).getCost() + " SP)", 50 + 150 * i, y);
+                        text(hero.getSkills().get(i).getName() + " (" + hero.getSkills().get(i).getCost() + " SP)", 100 + 200 * xAddition, y);
 
                         xAddition++;
-                        
+
                     }
 
-                    text("0. Cancelar", 100 + 150 * xAddition, y);
+                    text("Cancelar", 50, 650);
 
                 } else if (status == GameStatus.ITEM_MENU) {
 
                     int xAddition = 0;
-                    
+
                     int y = 550;
 
-                    for (int i = 0; i < hero.getItems().size(); i++) {
-                        
-                        if (i % 7 == 0 && i != 0) {
-                            
+                    maxPages = hero.getItems().size() / ITEMS_PER_PAGE;
+
+                    for (int i = 0 + (10 * page); i < hero.getItems().size() && i < 10 + (10 * page); i++) {
+
+                        if (i % 5 == 0 && i != 0 + (10 * page)) {
+
                             y += 50;
                             xAddition = 0;
-                            
+
                         }
 
-                        text((i + 1) + ". " + hero.getItems().get(i).getName() + " ( x" + hero.getItems().get(i).getAmount() + ")", 50 + 150 * xAddition, y);
+                        text(hero.getItems().get(i).getName() + " ( x" + hero.getItems().get(i).getAmount() + ")", 100 + 200 * xAddition, y);
 
                         xAddition++;
 
                     }
 
-                    text("0. Cancelar", 50 + 150 * xAddition, y);
+                    text("Cancelar", 50, 650);
+                    text("Pág. Anterior", 950, 650);
+                    text("Pág. Siguiente", 1100, 650);
 
                 }
 
@@ -224,9 +254,9 @@ public class JuegoRPG extends PApplet {
                     }
 
                     if (hero.hasStatusBuff()) { // Revisa si hay algún buffeo y luego revisa cuál buffeo tiene
-                        
+
                         hero.updateStatusUpgradeTurns();
-                        
+
                     }
 
                     if (!hero.isAlive()) {
@@ -337,50 +367,82 @@ public class JuegoRPG extends PApplet {
 
             }
 
-            if (key == '1') {
-                println("Presionaste 1: Ataque Físico");
+            if (key == ' ' || key == ENTER) {
 
-                hero.attack(enemy);
+                if (cursorIndexX == 0) {
+                    println("Presionaste 1: Ataque Físico");
 
-                if (!enemy.isAlive()) {
+                    hero.attack(enemy);
 
-                    int xpGained = enemy.getExpReward();
-                    System.out.println("¡Has ganado " + xpGained + " XP!");
+                    if (!enemy.isAlive()) {
 
-                    hero.gainExp(xpGained);
+                        int xpGained = enemy.getExpReward();
+                        System.out.println("¡Has ganado " + xpGained + " XP!");
 
-                    status = GameStatus.VICTORY;
+                        hero.gainExp(xpGained);
 
-                } else {
+                        status = GameStatus.VICTORY;
 
-                    playerTurn = false;
-                    temp = 60;
+                    } else {
+
+                        playerTurn = false;
+                        temp = 60;
+
+                    }
+
+                    cursorIndexX = 0;
+                    cursorIndexY = 0;
+
+                } else if (cursorIndexX == 1) {
+                    println("Presionaste 2: Magia");
+
+                    if (!hero.getSkills().isEmpty()) {
+
+                        status = GameStatus.SKILL_MENU;
+
+                    } else {
+
+                        System.out.println("No tienes habilidades");
+
+                    }
+
+                    cursorIndexX = 0;
+                    cursorIndexY = 0;
+
+                } else if (cursorIndexX == 2) {
+                    println("Presionaste 3: Objetos");
+
+                    if (!hero.getItems().isEmpty()) {
+
+                        status = GameStatus.ITEM_MENU;
+
+                    } else {
+
+                        System.out.println("No tienes objetos");
+
+                    }
+
+                    cursorIndexX = 0;
+                    cursorIndexY = 0;
+                }
+
+            } else if (key == LEFT || key == 'a') {
+
+                cursorIndexX -= 1;
+
+                if (cursorIndexX < 0) {
+
+                    cursorIndexX = 0;
 
                 }
 
-            } else if (key == '2') {
-                println("Presionaste 2: Magia");
+            } else if (key == RIGHT || key == 'd') {
 
-                if (!hero.getSkills().isEmpty()) {
+                cursorIndexX += 1;
 
-                    status = GameStatus.SKILL_MENU;
+                if (cursorIndexX > 2) {
 
-                } else {
-
-                    System.out.println("No tienes habilidades");
-
-                }
-
-            } else if (key == '3') {
-                println("Presionaste 3: Objetos");
-
-                if (!hero.getItems().isEmpty()) {
-
-                    status = GameStatus.ITEM_MENU;
-
-                } else {
-
-                    System.out.println("No tienes objetos");
+                    cursorIndexX = 2;
 
                 }
 
@@ -388,33 +450,116 @@ public class JuegoRPG extends PApplet {
 
         } else if (status == GameStatus.SKILL_MENU) { // El jugador está en el menu de mágia
 
-            for (int i = 0; i < hero.getSkills().size(); i++) {
+            if (key == ' ' || key == ENTER) {
 
-                if (key == String.valueOf(i + 1).charAt(0)) {
+                for (int i = 0; i < hero.getSkills().size(); i++) {
 
-                    hero.castSkill(hero.getSkills().get(i), enemy);
+                    if (cursorIndexX + 5 * cursorIndexY == i) {
 
-                    if (!enemy.isAlive()) {
+                        hero.castSkill(hero.getSkills().get(i), enemy);
 
-                        int xpGained = enemy.getExpReward();
-                        System.out.println("¡Has ganado " + xpGained + " XP!");
+                        if (!enemy.isAlive()) {
 
-                        hero.gainExp(xpGained);
+                            int xpGained = enemy.getExpReward();
+                            System.out.println("¡Has ganado " + xpGained + " XP!");
 
-                        status = GameStatus.VICTORY;
+                            hero.gainExp(xpGained);
 
-                    } else {
+                            status = GameStatus.VICTORY;
 
-                        playerTurn = false;
-                        temp = 60;
+                            cursorIndexX = 0;
+                            cursorIndexY = 0;
+
+                        } else {
+
+                            playerTurn = false;
+                            temp = 60;
+
+                            status = GameStatus.BATTLE;
+
+                            cursorIndexX = 0;
+                            cursorIndexY = 0;
+
+                        }
+
+                    } else if (cursorIndexY == 2 && cursorIndexX == -1) {
 
                         status = GameStatus.BATTLE;
 
+                        cursorIndexX = 0;
+                        cursorIndexY = 0;
+
                     }
 
-                } else if (key == '0') {
+                }
 
-                    status = GameStatus.BATTLE;
+            } else if (key == UP || key == 'w') {
+
+                cursorIndexY -= 1;
+
+                if (cursorIndexY < 0) {
+
+                    cursorIndexY = 0;
+
+                } else if (cursorIndexX <= -1) {
+
+                    cursorIndexX = 0;
+
+                }
+
+            } else if (key == DOWN || key == 's') {
+
+                cursorIndexY += 1;
+
+                if (cursorIndexY >= 2) {
+
+                    if (cursorIndexY == 2) {
+
+                        cursorIndexX = -1;
+
+                    }
+
+                    cursorIndexY = 2;
+
+                }
+
+            } else if (key == LEFT || key == 'a') {
+
+                cursorIndexX -= 1;
+
+                if (cursorIndexX <= -1) {
+
+                    if (cursorIndexX == -1) {
+
+                        cursorIndexY = 2;
+
+                    } else {
+
+                        cursorIndexX = -1;
+
+                    }
+
+                } else if (cursorIndexX >= 0 && cursorIndexX <= 4 && cursorIndexY >= 2) {
+
+                    cursorIndexY = 1;
+
+                }
+
+            } else if (cursorIndexX >= 0 && cursorIndexX <= 4 && cursorIndexY >= 2) {
+
+                cursorIndexY = 1;
+
+            } else if (key == RIGHT || key == 'd') {
+
+                cursorIndexX += 1;
+
+                if (cursorIndexX > 4) {
+
+                    cursorIndexX = 4;
+
+                } else if (cursorIndexX >= 0 && cursorIndexX <= 4 && cursorIndexY >= 2) {
+
+                    cursorIndexY = 1;
 
                 }
 
@@ -422,40 +567,165 @@ public class JuegoRPG extends PApplet {
 
         } else if (status == GameStatus.ITEM_MENU) { // El jugador está en el menu de mágia
 
-            for (int i = 0; i < hero.getItems().size(); i++) {
+            if (key == ' ' || key == ENTER) {
 
-                if (key == String.valueOf(i + 1).charAt(0)) {
+                for (int i = 0; i < hero.getItems().size(); i++) {
 
-                    if (!hero.getItems().get(i).getOffensive()) {
+                    if (cursorIndexY == 2 && cursorIndexX == 5) { // Pagina anterior
 
-                        hero.useItem(hero.getItems().get(i), hero);
+                        page -= 1;
 
-                    } else { // Objetos ofensivos
+                        if (page < 0) {
 
-                        hero.useItem(hero.getItems().get(i), enemy);
-                    }
+                            page = 0;
 
-                    if (!enemy.isAlive()) {
+                        }
 
-                        int xpGained = enemy.getExpReward();
-                        System.out.println("¡Has ganado " + xpGained + " XP!");
+                    } else if (cursorIndexY == 2 && cursorIndexX == 6) { // Pagina siguiente
 
-                        hero.gainExp(xpGained);
+                        page += 1;
 
-                        status = GameStatus.VICTORY;
+                        if (page > maxPages) {
 
-                    } else {
+                            page = maxPages;
 
-                        playerTurn = false;
-                        temp = 60;
+                        }
+
+                    } else if (cursorIndexY == 2 && cursorIndexX == -1) { // Cancelar
 
                         status = GameStatus.BATTLE;
 
+                        cursorIndexX = 0;
+                        cursorIndexY = 0;
+                        page = 0;
+
+                    } else if (cursorIndexX + (5 * cursorIndexY) + (10 * page) == i) { // Objeto seleccionado
+
+                        if (!hero.getItems().get(i).getOffensive()) {
+
+                            hero.useItem(hero.getItems().get(i), hero);
+
+                        } else { // Objetos ofensivos
+
+                            hero.useItem(hero.getItems().get(i), enemy);
+                        }
+
+                        if (!enemy.isAlive()) {
+
+                            int xpGained = enemy.getExpReward();
+                            System.out.println("¡Has ganado " + xpGained + " XP!");
+
+                            hero.gainExp(xpGained);
+
+                            status = GameStatus.VICTORY;
+
+                            cursorIndexX = 0;
+                            cursorIndexY = 0;
+                            page = 0;
+
+                        } else {
+
+                            playerTurn = false;
+                            temp = 60;
+
+                            status = GameStatus.BATTLE;
+
+                            cursorIndexX = 0;
+                            cursorIndexY = 0;
+                            page = 0;
+
+                        }
+
+                    }
+                }
+
+            } else if (key == UP || key == 'w') {
+
+                cursorIndexY -= 1;
+
+                if (cursorIndexY < 0) {
+
+                    cursorIndexY = 0;
+
+                } else if (cursorIndexX <= -1) {
+
+                    cursorIndexX = 0;
+
+                } else if (cursorIndexX > 4) {
+
+                    cursorIndexX = 4;
+
+                }
+
+            } else if (key == DOWN || key == 's') {
+
+                cursorIndexY += 1;
+
+                if (cursorIndexY >= 2) {
+
+                    if (cursorIndexY == 2 && cursorIndexX >= 0 && cursorIndexX <= 4) {
+
+                        if (cursorIndexX < 2) {
+
+                            cursorIndexX = -1;
+
+                        } else {
+
+                            cursorIndexX = 5;
+
+                        }
+
                     }
 
-                } else if (key == '0') {
+                    cursorIndexY = 2;
 
-                    status = GameStatus.BATTLE;
+                }
+
+            } else if (key == LEFT || key == 'a') {
+
+                cursorIndexX -= 1;
+
+                if (cursorIndexX <= -1) {
+
+                    if (cursorIndexX == -1) {
+
+                        cursorIndexY = 2;
+
+                    } else {
+
+                        cursorIndexX = -1;
+
+                    }
+
+                } else if (cursorIndexX >= 0 && cursorIndexX <= 4 && cursorIndexY >= 2) {
+
+                    cursorIndexY = 1;
+
+                }
+
+            } else if (cursorIndexX >= 0 && cursorIndexX <= 4 && cursorIndexY >= 2) {
+
+                cursorIndexY = 1;
+
+            } else if (key == RIGHT || key == 'd') {
+
+                cursorIndexX += 1;
+
+                if (cursorIndexX >= 5) {
+
+                    if (cursorIndexX > 6) {
+
+                        cursorIndexX = 6;
+
+                    } else {
+
+                        cursorIndexY = 2;
+
+                    }
+
+                } else if (cursorIndexX >= 0 && cursorIndexX <= 4 && cursorIndexY >= 2) {
+
+                    cursorIndexY = 1;
 
                 }
 
