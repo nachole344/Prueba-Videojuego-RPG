@@ -1,11 +1,15 @@
 package juegoprueba;
 
 import processing.core.PApplet;
+import processing.core.PImage;
 
 public class JuegoRPG extends PApplet {
 
     static final int SCREEN_WIDTH = 1275;
     static final int SCREEN_HEIGHT = 675;
+
+    static final float HUD_BAR_LEN = 200;
+    static final float HUD_BAR_HEI = 15;
 
     static final int ITEMS_PER_PAGE = 10;
 
@@ -55,6 +59,19 @@ public class JuegoRPG extends PApplet {
     Item templateCalcium;
     Item templateZinc;
 
+    // Sprites (Heroes)
+    PImage imgHero;
+
+    // Sprites (Enemigos)
+    PImage imgShadow;
+    PImage imgSlime;
+    PImage imgDragon;
+    PImage imgSkeleton;
+    PImage imgBat;
+
+    // Sprites (Fondos)
+    PImage imgBg;
+
     public static void main(String[] args) {
         PApplet.main("juegoprueba.JuegoRPG");
 
@@ -62,12 +79,93 @@ public class JuegoRPG extends PApplet {
 
     public void spawnNewEnemy() {
 
-        enemy = new Character("Shadow", 80, 20, 15, 10, 5, 5, Type.FIRE);
+        int enemySpawn = (int) random(100);
+        String enemyName;
 
-        enemy.addLevel(hero.getLevel() - 1);
-        enemy.addSkill(toxic);
-        enemy.addSkill(bufu);
+        if (enemySpawn > 95) {
 
+            enemyName = "Dragon";
+
+        } else if (enemySpawn > 70) {
+
+            enemyName = "Skeleton";
+
+        } else if (enemySpawn > 45) {
+
+            enemyName = "Slime";
+
+        } else if (enemySpawn > 10) {
+
+            enemyName = "Bat";
+
+        } else {
+
+            enemyName = "Shadow";
+
+        }
+
+        enemy = createEnemy(enemyName, (hero.getLevel() - 1));
+
+    }
+
+    public Character createEnemy(String type, int level) {
+
+        Character newEnemy = null;
+        // (Nombre, Vida máxima, SP máximos, Fuerza, Magia, Defensa, Defensa Mágica y Debilidad)
+
+        switch (type) {
+            case "Shadow":
+                newEnemy = new Character("Shadow", 80, 20, 15, 10, 5, 5, Type.FIRE);
+                newEnemy.addSkill(toxic);
+
+                imgShadow = loadImage("./data/Enemies/01.png");
+                newEnemy.setSprite(imgShadow);
+
+                if (hero.getLevel() > 3) {
+                    newEnemy.addSkill(bufu);
+                }
+
+                break;
+            case "Slime":
+                newEnemy = new Character("Slime", 80, 20, 15, 10, 5, 5, Type.FIRE);
+                newEnemy.addSkill(toxic);
+                newEnemy.setSprite(imgShadow);
+
+                if (hero.getLevel() > 3) {
+                    newEnemy.addSkill(dia);
+                }
+
+                break;
+            case "Bat":
+                newEnemy = new Character("Bat", 80, 20, 15, 10, 5, 5, Type.ELECTRIC);
+                newEnemy.addSkill(tornado);
+                newEnemy.setSprite(imgDragon);
+
+                if (hero.getLevel() > 3) {
+                    newEnemy.addSkill(toxic);
+                }
+
+                break;
+            case "Dragon":
+                newEnemy = new Character("Dragon", 130, 130, 15, 25, 10, 10, Type.ICE);
+                newEnemy.addSkill(agi);
+                newEnemy.setSprite(imgDragon);
+
+                break;
+            case "Skeleton":
+                newEnemy = new Character("Skeleton", 50, 50, 15, 10, 1, 1, Type.WIND);
+                newEnemy.addSkill(spark);
+                newEnemy.setSprite(imgDragon);
+
+                break;
+            default:
+                throw new AssertionError();
+        }
+
+        newEnemy.addLevel(level);
+        newEnemy.setPos(SCREEN_WIDTH * 3 / 4, 300);
+
+        return newEnemy;
     }
 
     @Override
@@ -99,8 +197,10 @@ public class JuegoRPG extends PApplet {
         templateCalcium = new Item("Calcium", ItemType.MAGIC_UPGRADE, 4, 1, false);
         templateZinc = new Item("Zinc", ItemType.MAGIC_DEFENSE_UPGRADE, 4, 1, false);
 
-        // Crear heroes, asignar sus skills y darle sus objetos iniciales.
+        // Crear heroes, asignar coordenadas, asignar sus skills y darle sus objetos iniciales.
         hero = new Character("Joker", 100, 50, 20, 15, 10, 10, Type.ICE);
+        hero.setPos(SCREEN_WIDTH / 4, 300);
+
         hero.addSkill(agi);
         hero.addSkill(bufu);
         hero.addSkill(dia);
@@ -117,20 +217,46 @@ public class JuegoRPG extends PApplet {
         hero.addItem(templateCalcium, 1);
         hero.addItem(templateZinc, 1);
 
-        // Crear  y asignar sus skills
+        // Crear enemigos y asignar sus skills
         enemy = new Character("Shadow", 80, 20, 15, 10, 5, 5, Type.FIRE);
+        enemy.setPos(SCREEN_WIDTH * 3 / 4, 300);
+
         enemy.addSkill(toxic);
+
+        // Cargar imagen BG
+        imgBg = loadImage("./data/BG/01.png");
+
+        // Cargar y asignar sprites iniciales
+        imgHero = loadImage("./data/Heroes/01.png");
+        hero.setSprite(imgHero);
+
+        imgShadow = loadImage("./data/Enemies/01.png");
+        enemy.setSprite(imgShadow);
+
+        // Cargar Sprites de uso posterior
+        imgDragon = loadImage("./data/Enemies/02.png");
 
     }
 
     @Override
     public void draw() {
-        background(0); // fondo negro
+        if (imgBg != null) {
+            image(imgBg, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+        } else {
+            background(0);
+        }
 
         if (status == GameStatus.BATTLE || status == GameStatus.SKILL_MENU || status == GameStatus.ITEM_MENU) {
 
-            drawCharacter(hero, SCREEN_WIDTH / 4, 300);
-            drawCharacter(enemy, SCREEN_WIDTH * 3 / 4, 300);
+            drawHUD(hero, 10, 15);
+            drawCharacter(hero, hero.getPosX(), hero.getPosY());
+
+            drawHUD(enemy, SCREEN_WIDTH - (HUD_BAR_LEN + 10), 15);
+            drawCharacter(enemy, enemy.getPosX(), enemy.getPosY());
+
+            textAlign(CENTER);
+            hero.renderCombatText(this);
+            enemy.renderCombatText(this);
 
             fill(255);
             textSize(20);
@@ -138,24 +264,24 @@ public class JuegoRPG extends PApplet {
 
             if (playerTurn) {
 
-                text("TU TURNO", SCREEN_WIDTH / 2, 30);
+                textWithOutline("TU TURNO", SCREEN_WIDTH / 2, 30, 255, 255, 255);
 
                 textAlign(LEFT);
 
                 if (cursorIndexX < 0 || cursorIndexX > 4) {
 
-                    text("> ", 180 + 150 * cursorIndexX, 550 + 50 * cursorIndexY);
+                    textWithOutline("> ", 180 + 150 * cursorIndexX, 550 + 50 * cursorIndexY, 255, 255, 255);
 
                 } else {
 
-                    text("> ", 80 + 200 * cursorIndexX, 550 + 50 * cursorIndexY);
+                    textWithOutline("> ", 80 + 200 * cursorIndexX, 550 + 50 * cursorIndexY, 255, 255, 255);
 
                 }
                 if (status == GameStatus.BATTLE) {
 
-                    text("Ataque", 100, 550);
-                    text("Skills", 300, 550);
-                    text("Objetos", 500, 550);
+                    textWithOutline("Ataque", 100, 550, 255, 255, 255);
+                    textWithOutline("Skills", 300, 550, 255, 255, 255);
+                    textWithOutline("Objetos", 500, 550, 255, 255, 255);
 
                 } else if (status == GameStatus.SKILL_MENU) {
 
@@ -172,13 +298,13 @@ public class JuegoRPG extends PApplet {
 
                         }
 
-                        text(hero.getSkills().get(i).getName() + " (" + hero.getSkills().get(i).getCost() + " SP)", 100 + 200 * xAddition, y);
+                        textWithOutline(hero.getSkills().get(i).getName() + " (" + hero.getSkills().get(i).getCost() + " SP)", 100 + 200 * xAddition, y, 255, 255, 255);
 
                         xAddition++;
 
                     }
 
-                    text("Cancelar", 50, 650);
+                    textWithOutline("Cancelar", 50, 650, 255, 255, 255);
 
                 } else if (status == GameStatus.ITEM_MENU) {
 
@@ -197,21 +323,21 @@ public class JuegoRPG extends PApplet {
 
                         }
 
-                        text(hero.getItems().get(i).getName() + " ( x" + hero.getItems().get(i).getAmount() + ")", 100 + 200 * xAddition, y);
+                        textWithOutline(hero.getItems().get(i).getName() + " ( x" + hero.getItems().get(i).getAmount() + ")", 100 + 200 * xAddition, y, 255, 255, 255);
 
                         xAddition++;
 
                     }
 
-                    text("Cancelar", 50, 650);
-                    text("Pág. Anterior", 950, 650);
-                    text("Pág. Siguiente", 1100, 650);
+                    textWithOutline("Cancelar", 50, 650, 255, 255, 255);
+                    textWithOutline("Pág. Anterior", 950, 650, 255, 255, 255);
+                    textWithOutline("Pág. Siguiente", 1100, 650, 255, 255, 255);
 
                 }
 
             } else {
 
-                text("TURNO DEL ENEMIGO", SCREEN_WIDTH / 2, 30);
+                textWithOutline("TURNO DEL ENEMIGO", SCREEN_WIDTH / 2, 30, 255, 255, 255);
 
             }
 
@@ -273,20 +399,18 @@ public class JuegoRPG extends PApplet {
 
         } else if (status == GameStatus.VICTORY) {
 
-            fill(0, 255, 0); // Verde
             textSize(50);
             textAlign(CENTER);
-            text("¡VICTORIA!", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
+            textWithOutline("¡VICTORIA!", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 0, 255, 0);
             textSize(20);
-            text("Pulsa 'C' para continuar", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 50);
+            textWithOutline("Pulsa 'C' para continuar", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 50, 0, 255, 0);
 
         } else if (status == GameStatus.DEFEAT) {
 
-            fill(255, 0, 0); // Rojo
             textSize(50);
             textAlign(CENTER);
-            text("GAME OVER", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
-            text("Pulsa 'R' para reiniciar", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 50);
+            textWithOutline("GAME OVER", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2,255, 0, 0);
+            textWithOutline("Pulsa 'R' para reiniciar", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 + 50,255, 0, 0);
 
         }
     }
@@ -294,21 +418,49 @@ public class JuegoRPG extends PApplet {
     // Dibujo de personaje
     public void drawCharacter(Character c, float x, float y) {
 
-        if (c.isPoisoned()) { // si está envenenado se prioriza
+        c.updateAnimation();
 
-            fill(100, 255, 100);
+        float drawX = x;
+        float drawY = y;
 
-        } else if (x < SCREEN_WIDTH / 2) { // si está en el lado izquierdo es un héroe
-
-            fill(100, 100, 255);
-
-        } else {                    // si está en el lado derecho es un villano
-
-            fill(255, 100, 100);
+        if (c.isHurting()) {
+            drawX += random(-5, 5);
+            drawY += random(-5, 5);
 
         }
 
-        rect(x - 25, y, 50, 100); // El personaje (de momento un rectangulo)
+        if (c.isHurting()) { // Dañado
+            tint(255, 100, 100);
+
+        } else if (c.isPoisoned()) { // Envenenado
+            tint(150, 100, 255);
+
+        } else { // Normal
+            noTint();
+
+        }
+
+        if (c.getSprite() != null) {
+
+            image(c.getSprite(), drawX - 50, drawY, 100, 100);
+
+        } else {
+
+            if (drawX < SCREEN_WIDTH / 2) { // si está en el lado izquierdo es un héroe
+
+                fill(100, 100, 255);
+
+            } else {                    // si está en el lado derecho es un villano
+
+                fill(255, 100, 100);
+
+            }
+
+            rect(drawX - 25, drawY, 50, 100); // El personaje (de momento un rectangulo)
+
+        }
+
+        noTint();
 
         if (c.hasStatusBuff()) { // Revisa si hay algún buffeo y luego revisa cuál buffeo tiene
 
@@ -317,44 +469,115 @@ public class JuegoRPG extends PApplet {
 
             if (c.getStrengthUpgrade() > 0) {
                 fill(255, 50, 50);
-                text("S", x - 25, y + 115);
+                text("S", drawX - 25, drawY + 115);
             }
 
             if (c.getDefenseUpgrade() > 0) {
                 fill(50, 50, 255);
-                text("D", x - 10, y + 115);
+                text("D", drawX - 10, drawY + 115);
             }
 
             if (c.getMagicUpgrade() > 0) {
                 fill(50, 255, 50);
-                text("M", x + 5, y + 115);
+                text("M", drawX + 5, drawY + 115);
 
             }
 
             if (c.getMagicDefenseUpgrade() > 0) {
                 fill(50, 200, 200);
-                text("MD", x + 25, y + 115);
+                text("MD", drawX + 25, drawY + 115);
 
             }
 
         }
 
+    }
+
+    public void drawHUD(Character c, float x, float y) {
+
         fill(255);
         textSize(20);
-        textAlign(CENTER);
 
-        text(c.getName() + " Lv. " + c.getLevel(), x, y - 30);
+        if (x < SCREEN_WIDTH / 2) { // Heroe
 
-        if (c.getCurrentHP() < c.getMaxHP() / 4) {
+            textAlign(LEFT);
+            textWithOutline(c.getName() + " Lv." + c.getLevel(), x, y + 10, 255, 255, 255);
 
-            fill(255, 75, 75);
+        } else { // Villano
+
+            textAlign(RIGHT);
+            textWithOutline(c.getName() + " Lv." + c.getLevel(), x + HUD_BAR_LEN, y + 10, 255, 255, 255);
 
         }
 
-        text("HP: " + c.getCurrentHP() + " / " + c.getMaxHP(), x, y + 130);
+        fill(50);
+        stroke(255);
+        rect(x, y + 20, HUD_BAR_LEN, HUD_BAR_HEI);
 
-        fill(255);
-        text("SP: " + c.getCurrentSP() + " / " + c.getMaxSP(), x, y + 160);
+        noFill();
+        noStroke();
+
+        float HPlen = HUD_BAR_LEN * ((float) c.getCurrentHP() / c.getMaxHP());
+
+        if (c.getCurrentHP() > c.getMaxHP() / 2) {
+
+            fill(100, 255, 100);
+
+        } else if (c.getCurrentHP() > c.getMaxHP() / 4) {
+
+            fill(200, 200, 100);
+
+        } else {
+
+            fill(200, 100, 100);
+
+        }
+
+        rect(x, y + 20, HPlen, HUD_BAR_HEI);
+
+        fill(50);
+        stroke(255);
+        rect(x, y + 40, HUD_BAR_LEN, HUD_BAR_HEI);
+
+        noFill();
+
+        float SPlen = HUD_BAR_LEN * ((float) c.getCurrentSP() / c.getMaxSP());
+
+        if (c.getCurrentSP() > c.getMaxSP() / 2) {
+
+            fill(100, 100, 255);
+
+        } else if (c.getCurrentSP() > c.getMaxSP() / 4) {
+
+            fill(75, 75, 200);
+
+        } else {
+
+            fill(50, 50, 200);
+
+        }
+
+        rect(x, y + 40, SPlen, HUD_BAR_HEI);
+
+    }
+
+    public void textWithOutline(String message, float x, float y, int r, int g, int b) {
+
+        fill(0);
+        int offset = 2;
+
+        text(message, x - offset, y);
+        text(message, x + offset, y);
+        text(message, x, y - offset);
+        text(message, x, y + offset);
+
+        text(message, x - offset, y - offset);
+        text(message, x + offset, y - offset);
+        text(message, x - offset, y + offset);
+        text(message, x + offset, y + offset);
+
+        fill(r, g, b);
+        text(message, x, y);
     }
 
     @Override
@@ -569,37 +792,45 @@ public class JuegoRPG extends PApplet {
 
             if (key == ' ' || key == ENTER) {
 
-                for (int i = 0; i < hero.getItems().size(); i++) {
+                if (cursorIndexY == 2 && cursorIndexX == 5) { // Pagina anterior
 
-                    if (cursorIndexY == 2 && cursorIndexX == 5) { // Pagina anterior
+                    page -= 1;
 
-                        page -= 1;
+                    if (page < 0) {
 
-                        if (page < 0) {
-
-                            page = 0;
-
-                        }
-
-                    } else if (cursorIndexY == 2 && cursorIndexX == 6) { // Pagina siguiente
-
-                        page += 1;
-
-                        if (page > maxPages) {
-
-                            page = maxPages;
-
-                        }
-
-                    } else if (cursorIndexY == 2 && cursorIndexX == -1) { // Cancelar
-
-                        status = GameStatus.BATTLE;
-
-                        cursorIndexX = 0;
-                        cursorIndexY = 0;
                         page = 0;
 
-                    } else if (cursorIndexX + (5 * cursorIndexY) + (10 * page) == i) { // Objeto seleccionado
+                    }
+
+                    return;
+
+                } else if (cursorIndexY == 2 && cursorIndexX == 6) { // Pagina siguiente
+
+                    page += 1;
+
+                    if (page > maxPages) {
+
+                        page = maxPages;
+
+                    }
+
+                    return;
+
+                } else if (cursorIndexY == 2 && cursorIndexX == -1) { // Cancelar
+
+                    status = GameStatus.BATTLE;
+
+                    cursorIndexX = 0;
+                    cursorIndexY = 0;
+                    page = 0;
+
+                    return;
+
+                }
+
+                for (int i = 0; i < hero.getItems().size(); i++) {
+
+                    if (cursorIndexX + (5 * cursorIndexY) + (10 * page) == i) { // Objeto seleccionado
 
                         if (!hero.getItems().get(i).getOffensive()) {
 

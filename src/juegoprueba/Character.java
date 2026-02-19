@@ -1,6 +1,9 @@
 package juegoprueba;
 
 import java.util.ArrayList;
+import processing.core.PApplet;
+import processing.core.PImage;
+import juegoprueba.JuegoRPG;
 
 public class Character {
 
@@ -14,6 +17,13 @@ public class Character {
     private int currentSp;
 
     private Type weakness;
+
+    // Posicion
+    private float posX;
+    private float posY;
+
+    // Sprite
+    private PImage sprite;
 
     // Stats
     private int strength;
@@ -37,6 +47,12 @@ public class Character {
     private int magicUpgradeTurnsLeft = 0;
     private int magicDefenseUpgradeTurnsLeft = 0;
 
+    // Animations variables
+    private int hurtAnimationTimer = 0;
+
+    // Combat Text
+    private ArrayList<CombatText> combatTexts = new ArrayList<>();
+
     // Constructor (Nombre, Vida máxima, SP máximos, Fuerza, Magia, Defensa, Defensa Mágica y Debilidad)
     public Character(String name, int maxHp, int maxSp, int strength, int magic, int defense, int magicDefense, Type weakness) {
         this.name = name;
@@ -57,6 +73,16 @@ public class Character {
         this.skills = new ArrayList<>();
         this.items = new ArrayList<>();
 
+    }
+
+    // Setters
+    public void setSprite(PImage sprite) {
+        this.sprite = sprite;
+    }
+
+    public void setPos(float x, float y) {
+        this.posX = x;
+        this.posY = y;
     }
 
     // Getters para usos posteriores
@@ -168,6 +194,22 @@ public class Character {
         return this.magicDefenseUpgradeTurnsLeft;
     }
 
+    public PImage getSprite() {
+        return this.sprite;
+    }
+
+    public ArrayList<CombatText> getCombatTexts() {
+        return this.combatTexts;
+    }
+
+    public float getPosX() {
+        return this.posX;
+    }
+
+    public float getPosY() {
+        return this.posY;
+    }
+
     // Methods
     public void restPoisonTurn(int amount) {
         this.poisonedTurnsLeft -= amount;
@@ -257,7 +299,7 @@ public class Character {
             if (i.getName().equals(itemTemplate.getName())) {
 
                 if (i.getAmount() >= 99) {
-                    
+
                     System.out.println("No se pueden acumular más " + itemTemplate.getName() + " en el inventario");
                     return;
 
@@ -266,7 +308,7 @@ public class Character {
                     i.addAmount(amount);
                     System.out.println(this.name + " guardó " + itemTemplate.getName() + " (Total: " + i.getAmount() + ")");
                     return;
-                    
+
                 }
 
             }
@@ -388,10 +430,14 @@ public class Character {
 
         this.currentHp -= damage;
 
+        this.hurtAnimationTimer = 20;
+
         // Seguro para que la vida no sea negativa
         if (this.currentHp < 0) {
             this.currentHp = 0;
         }
+
+        this.combatTexts.add(new CombatText("-" + damage, this.getPosX(), this.getPosY() - 50, 255, 50, 50));
 
         System.out.println(this.name + " recibió " + damage + " de daño!");
     }
@@ -419,6 +465,8 @@ public class Character {
             this.currentHp = this.maxHp;
 
         }
+
+        this.combatTexts.add(new CombatText("+" + heal, this.getPosX(), this.getPosY() - 50, 50, 255, 50));
 
         if (this.currentHp == this.maxHp) {
             System.out.println(this.name + " recuperó toda su vida!");
@@ -664,9 +712,55 @@ public class Character {
 
     }
 
+    public void updateAnimation() {
+        if (this.hurtAnimationTimer > 0) {
+            this.hurtAnimationTimer--;
+        }
+    }
+
     public boolean isAlive() {
 
         return this.currentHp > 0;
+
+    }
+
+    public boolean isHurting() {
+        return this.hurtAnimationTimer > 0;
+    }
+
+    public void renderCombatText(PApplet app) {
+
+        for (int i = this.combatTexts.size() - 1; i >= 0; i--) {CombatText renderText = this.combatTexts.get(i);
+            
+            app.fill(0);
+            
+            float x = renderText.getXpos();
+            float y = renderText.getYpos();
+            int offset = 2;
+            
+            String mensaje = renderText.getText();
+
+            app.text(mensaje, x - offset, y); 
+            app.text(mensaje, x + offset, y);
+            app.text(mensaje, x, y - offset);
+            app.text(mensaje, x, y + offset);
+            
+            app.text(mensaje, x - offset, y - offset);
+            app.text(mensaje, x + offset, y - offset);
+            app.text(mensaje, x - offset, y + offset);
+            app.text(mensaje, x + offset, y + offset);
+
+            app.fill(renderText.getRvalue(), renderText.getGvalue(), renderText.getBvalue());
+            
+            app.text(mensaje, x, y);
+            
+            renderText.update();
+            
+            if (renderText.isTimerFinish()) {
+                this.combatTexts.remove(i);
+            }
+
+        }
 
     }
 

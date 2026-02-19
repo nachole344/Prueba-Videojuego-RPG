@@ -1,5 +1,9 @@
 
-package juegoprueba;
+package juegoprueba.Legacy;
+
+import juegoprueba.Character;
+import juegoprueba.Skill;
+import juegoprueba.Type;
 
 public class Main {
     

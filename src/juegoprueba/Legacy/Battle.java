@@ -1,7 +1,9 @@
-package juegoprueba;
+package juegoprueba.Legacy;
 
 import java.util.ArrayList;
 import java.util.Scanner;
+import juegoprueba.Character;
+import juegoprueba.Skill;
 
 public class Battle {
 
